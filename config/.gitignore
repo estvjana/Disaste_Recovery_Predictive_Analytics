@@ -1,0 +1,20 @@
+# ── Secrets (NEVER commit these) ─────────────────────────────
+config/.env
+*.env
+.env
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.uv/
+
+# ── Data / large files ───────────────────────────────────────
+data/NOAA/
+data/BEA/BEA_StateGDP_1997_2024/
+*.pkl
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
