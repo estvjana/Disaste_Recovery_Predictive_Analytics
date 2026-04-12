@@ -44,7 +44,7 @@ python3 -m streamlit run ML_models/drpi_04_dashboard.py
 ML_models/
   drpi_01_build_feature_matrix.py   ← Step 1: builds state feature matrix
   drpi_02_predictive_models.py      ← Step 2: Ridge regression + SHAP + CVI
-  drpi_03_narrative_generator.py    ← Step 3: generates state narratives
+  drpi_03_narrative_generator.py    ← Step 3: state narratives
   drpi_04_dashboard.py              ← Step 4: Streamlit dashboard (main app)
   drpi_config.py                    ← shared config loader
   drpi_gov_data.py                  ← political economy tab data
