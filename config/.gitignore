@@ -2,6 +2,7 @@
 config/.env
 *.env
 .env
+config/.env.example
 
 # ── Python ───────────────────────────────────────────────────
 __pycache__/
