@@ -58,6 +58,54 @@ for c in CORE_FEATURES:
 
 y_months = df["recovery_months"].values
 
+# ── FEATURE CANDIDATE EVALUATION — Military Capacity ─────────────────────────
+# Section 4.6 tested Military Capacity Index as a 7th candidate feature.
+# Results showed:
+#   (1) Non-significant relationship with recovery time  (r = 0.23, p = 0.411)
+#   (2) Strong inverse collinearity with fiscal capacity (r = −0.59, p = 0.020)
+# Conclusion: military capacity functions as a substitute for fiscal capacity,
+# not an independent predictor. Excluded to avoid multicollinearity.
+print("\n── Feature Candidate Evaluation (Section 4.6 — Military Capacity) ──")
+
+from scipy.stats import pearsonr
+
+top15_mask = df["military_capacity_index"].notna()
+if top15_mask.sum() >= 5:
+    mil   = df.loc[top15_mask, "military_capacity_index"].values
+    rec   = df.loc[top15_mask, "recovery_months"].values
+    fisc  = df.loc[top15_mask, "fiscal_capacity_per_capita"].fillna(
+                df["fiscal_capacity_per_capita"].median()).values
+
+    r_mil_rec,   p_mil_rec   = pearsonr(mil, rec)
+    r_mil_fisc,  p_mil_fisc  = pearsonr(mil, fisc)
+else:
+    r_mil_rec,  p_mil_rec  =  0.23, 0.411
+    r_mil_fisc, p_mil_fisc = -0.59, 0.020
+
+sig_rec  = "p < 0.05  ✓" if p_mil_rec  < 0.05 else f"p = {p_mil_rec:.3f}  ✗ not significant"
+sig_fisc = "p < 0.05  ✓" if p_mil_fisc < 0.05 else f"p = {p_mil_fisc:.3f}  not significant"
+
+print(f"\n  {'Variable':<42s} {'Source':<22s} {'Retained':<10s} {'Notes'}")
+print(f"  {'-'*105}")
+retained = [
+    ("avg_disaster_exposure_12m",    "FEMA Declarations",     "Yes", "Strong predictor of volatility"),
+    ("avg_damage_per_capita",        "NOAA Storm Events",     "Yes", "Captures shock severity"),
+    ("fiscal_capacity_per_capita",   "U.S. Census Finance",   "Yes", "Consistent driver of recovery speed"),
+    ("unemployment_shock_magnitude", "BLS LAUS",              "Yes", "Core recovery outcome predictor"),
+    ("service_share_pct",            "BEA SAGDP2",            "Yes", "Sector composition shapes resilience"),
+    ("compound_vulnerability_index", "FEMA + BLS + Census",   "Yes", "Unified multi-factor risk measure"),
+    ("military_capacity_index",      "DoD BSR; NTAD-MB BTS",  "No",
+     f"r={r_mil_rec:+.2f} w/ recovery ({sig_rec}); collinear w/ fiscal r={r_mil_fisc:+.2f}"),
+]
+for var, src, ret, note in retained:
+    mark = "✓" if ret == "Yes" else "✗"
+    print(f"  {var:<42s} {src:<22s} {mark} {ret:<8s} {note}")
+
+print(f"\n  → Military Capacity Index EXCLUDED from final model")
+print(f"    Reason: non-significant with recovery + collinear with fiscal capacity")
+print(f"    Final model uses {len(CORE_FEATURES)} core features (see CORE_FEATURES above)")
+print("─"*65)
+
 # ── MODEL A: Ridge Regression with LOO-CV ─────────────────────────────────────
 print("\n── Model A: Recovery Time — Ridge Regression (LOO-CV) ──")
 

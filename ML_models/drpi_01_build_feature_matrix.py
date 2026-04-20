@@ -161,7 +161,7 @@ bea_df["profile_benchmark_months"] = bea_df["economic_profile"].map(PROFILE_AVG)
 print(f"  ✓ {len(bea_df)} states")
 
 # ── 5. Fiscal Capacity ────────────────────────────────────────────────────────
-print("\n[5/5] Fiscal capacity from Census State Finances...")
+print("\n[5/6] Fiscal capacity from Census State Finances...")
 try:
     census_file = max(glob.glob(os.path.join(CENSUS_DIR,"GOVSSTATEFINTIMESERIES*.xlsx")))
     fc_raw = pd.read_excel(census_file, sheet_name="Data")
@@ -197,6 +197,47 @@ except Exception as e:
     fiscal = pd.DataFrame({"state":list(ABBR_TO_STATE.values()),
                            "fiscal_capacity_per_capita":[med]*50})
 
+# ── 6. Education Disruption ───────────────────────────────────────────────────
+# Virtual learning share from COVID School Data Hub (CSDH 2020-2023)
+# Higher virtual learning share = more disruption = longer recovery
+print("\n[6/7] Education disruption (CSDH — virtual learning share)...")
+EDU_FILE = os.path.join(ROOT,"data","Education",
+                         "covid_school_learning_modality_district_yearly.csv")
+try:
+    edu_raw = pd.read_csv(EDU_FILE, low_memory=False)
+    edu_agg = (
+        edu_raw.groupby("StateAbbrev")["share_virtual"]
+        .mean().reset_index()
+        .rename(columns={"StateAbbrev":"abbr","share_virtual":"virtual_learning_share"})
+    )
+    edu_agg["state"] = edu_agg["abbr"].map(ABBR_TO_STATE)
+    education = edu_agg[["state","virtual_learning_share"]].dropna()
+    print(f"  ✓ {len(education)} states — median virtual share: {education['virtual_learning_share'].median():.1%}")
+except Exception as e:
+    print(f"  ⚠ Education load failed ({e}) — using median imputation")
+    education = pd.DataFrame({"state": list(ABBR_TO_STATE.values()),
+                              "virtual_learning_share": [0.25] * 50})
+
+# ── 7. Military Capacity Index ────────────────────────────────────────────────
+# Pre-computed from DoD BSR FY2019-FY2025 + NTAD-MB (USDOT BTS)
+# Composite: 40% NG sites + 30% NG plant replacement value +
+#            20% NTAD base count + 10% NG acres  (all normalized 0-100)
+# Source: Fig_Military_Capacity_vs_Recovery.py  &  Fig_Military_Section46.py
+print("\n[7/7] Military Capacity Index (DoD BSR + NTAD-MB)...")
+MIL_DATA = {
+    "Tennessee":     86.74, "Texas":         57.01, "Mississippi":   49.50,
+    "Missouri":      48.99, "Georgia":        46.88, "Florida":       44.05,
+    "Louisiana":     38.97, "Arkansas":       37.76, "Oklahoma":      35.13,
+    "Iowa":          34.24, "North Carolina": 31.75, "Virginia":      31.67,
+    "Kansas":        28.89, "Kentucky":       28.50, "Nebraska":      27.37,
+}
+military = pd.DataFrame(
+    list(MIL_DATA.items()), columns=["state", "military_capacity_index"]
+)
+print(f"  ✓ {len(military)} states — military capacity loaded")
+print(f"  Note: evaluated as candidate feature; excluded from final model")
+print(f"        (non-significant with recovery, collinear with fiscal capacity)")
+
 # ── ASSEMBLE ─────────────────────────────────────────────────────────────────
 print("\n── Assembling & computing Compound Vulnerability Index...")
 matrix = (
@@ -206,7 +247,9 @@ matrix = (
     .merge(bea_df[["state","service_share_pct","industry_share_pct",
                    "natres_share_pct","tourism_share_pct","govt_share_pct",
                    "economic_profile","profile_benchmark_months"]], on="state", how="left")
-    .merge(fiscal,   on="state", how="left")
+    .merge(fiscal,    on="state", how="left")
+    .merge(education, on="state", how="left")  # CVI dimension 6 — education disruption
+    .merge(military,  on="state", how="left")  # candidate feature — evaluated, excluded
 )
 # Derive abbr cleanly from state name
 matrix["abbr"] = matrix["state"].map(STATE_TO_ABBR)
@@ -215,7 +258,9 @@ matrix["abbr"] = matrix["state"].map(STATE_TO_ABBR)
 matrix = matrix[matrix["state"].isin(ABBR_TO_STATE.values())].copy()
 
 # ── Compound Vulnerability Index (CVI) ────────────────────────────────────────
-# Five dimensions from paper — each normalised 0-1, weighted average
+# Six dimensions — each normalised 0-1, weighted average
+# Updated: added education disruption (Section 4.5 — CSDH + NCES-ADA)
+# Weights: labor 25 | disaster 20 | damage 20 | fiscal 15 | structure 10 | education 10
 def mm(s):
     mn,mx = s.min(), s.max()
     return ((s-mn)/(mx-mn+1e-9)).clip(0,1)
@@ -224,15 +269,18 @@ v_labor    = mm(matrix["unemployment_volatility_excl_covid"].fillna(matrix["unem
 v_disaster = mm(matrix["avg_disaster_exposure_12m"].fillna(0))
 v_damage   = mm(matrix["avg_damage_per_capita"].fillna(0))
 v_fiscal   = 1 - mm(matrix["fiscal_capacity_per_capita"].fillna(matrix["fiscal_capacity_per_capita"].median()))
-v_struct   = mm(matrix["service_share_pct"].fillna(60))   # higher svc = slower recovery
+v_struct   = mm(matrix["service_share_pct"].fillna(60))       # higher svc = slower recovery
+v_edu      = mm(matrix["virtual_learning_share"].fillna(      # higher virtual = more disruption
+                matrix["virtual_learning_share"].median() if "virtual_learning_share" in matrix else 0.25))
 
-matrix["cvi_labor"]    = v_labor.round(4)
-matrix["cvi_disaster"] = v_disaster.round(4)
-matrix["cvi_damage"]   = v_damage.round(4)
-matrix["cvi_fiscal"]   = v_fiscal.round(4)
-matrix["cvi_structure"]= v_struct.round(4)
+matrix["cvi_labor"]     = v_labor.round(4)
+matrix["cvi_disaster"]  = v_disaster.round(4)
+matrix["cvi_damage"]    = v_damage.round(4)
+matrix["cvi_fiscal"]    = v_fiscal.round(4)
+matrix["cvi_structure"] = v_struct.round(4)
+matrix["cvi_education"] = v_edu.round(4)
 matrix["compound_vulnerability_index"] = (
-    v_labor*0.25 + v_disaster*0.25 + v_damage*0.20 + v_fiscal*0.15 + v_struct*0.15
+    v_labor*0.25 + v_disaster*0.20 + v_damage*0.20 + v_fiscal*0.15 + v_struct*0.10 + v_edu*0.10
 ).round(4)
 
 num = matrix.select_dtypes("number").columns
