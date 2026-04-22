@@ -1,4 +1,4 @@
-# Multi-Sector Disaster Recovery Predictive Analytics
+# The Bounce-Back: Multi-Sector Disaster Recovery Predictive Analytics
 **UNC Charlotte · DTSC 4302**
 
 A data-driven dashboard that predicts how long U.S. states take to recover across labor markets, fiscal systems, and economic sectors after a natural disaster.
