@@ -97,3 +97,14 @@ Place them in `data/NOAA/` and `data/BEA/BEA_StateGDP_1997_2024/` respectively.
 | Risk Map | Explore by indicator: composite risk, recovery time, CVI, fiscal capacity, disaster exposure |
 | Research Analytics | Seven tabs: economic structure, fiscal capacity, service economy, political economy, education disruption, recovery predictors, policy insights |
 | State Deep-Dive | Select any state: predicted recovery time, labor instability tier, SHAP explanation, CVI radar |
+
+
+## Research Team
+| Name |
+|---|
+| Ana Julia Abreu Estevez |
+| Wendy Ceja-Huerta |
+| Maria Eduarda C. F. de Resende Silva |
+| Jake Fabrizio |
+| Carolina Rangel Lara |
+| Riya Vadadoria |
