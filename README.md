@@ -1,4 +1,4 @@
-# The Bounce-Back: Multi-Sector Disaster Recovery Predictive Analytics
+# Multi-Sector Disaster Recovery Predictive Analytics
 **UNC Charlotte · DTSC 4302**
 
 A data-driven dashboard that predicts how long U.S. states take to recover across labor markets, fiscal systems, and economic sectors after a natural disaster.
@@ -100,11 +100,13 @@ Place them in `data/NOAA/` and `data/BEA/BEA_StateGDP_1997_2024/` respectively.
 
 
 ## Research Team
-| Name |
-|---|
-| Ana Julia Abreu Estevez |
-| Wendy Ceja-Huerta |
-| Maria Eduarda C. F. de Resende Silva |
-| Jake Fabrizio |
+| Name | GitHub |
+|---|---|
+| Ana Julia Abreu Estevez | [@estvjana](https://github.com/estvjana) |
+| Wendy Ceja-Huerta | [@wcejahuerta](https://github.com/wcejahuerta) |
+| Maria Eduarda C. F. de Resende Silva | [@mecfrs](https://github.com/mecfrs) |
+| Jake Fabrizio | [@Jakefab245](https://github.com/Jakefab245) |
+| Carolina Rangel Lara | [@caro-98](https://github.com/caro-98) |
+| Riya Vadadoria | [@riya0106](https://github.com/riya0106) |
 | Carolina Rangel Lara |
 | Riya Vadadoria |
