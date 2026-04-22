@@ -108,5 +108,3 @@ Place them in `data/NOAA/` and `data/BEA/BEA_StateGDP_1997_2024/` respectively.
 | Jake Fabrizio | [@Jakefab245](https://github.com/Jakefab245) |
 | Carolina Rangel Lara | [@caro-98](https://github.com/caro-98) |
 | Riya Vadadoria | [@riya0106](https://github.com/riya0106) |
-| Carolina Rangel Lara |
-| Riya Vadadoria |
